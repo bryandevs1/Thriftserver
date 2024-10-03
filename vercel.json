@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "bryan-server",
+  "name": "bryan",
   "builds": [
     {
       "src": "server.js",
@@ -9,7 +9,15 @@
   ],
   "routes": [
     {
+      "src": "/activation/(.*)",
+      "dest": "/server.js"
+    },
+    {
       "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
       "dest": "/server.js"
     }
   ]

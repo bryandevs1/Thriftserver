@@ -62,65 +62,34 @@ const createActivationToken = (user) => {
   });
 };
 
+
 // activate user
-router.post(
-  "/activation",
-  catchAsyncErrors(async (req, res, next) => {
-    try {
-      const { activation_token } = req.body;
-
-      const newUser = jwt.verify(
-        activation_token,
-        process.env.ACTIVATION_SECRET
-      );
-
-      if (!newUser) {
-        return next(new ErrorHandler("Invalid token", 400));
-      }
-      const { name, email, password, avatar } = newUser;
-
-      let user = await User.findOne({ email });
-
-      if (user) {
-        return next(new ErrorHandler("User already exists", 400));
-      }
-      user = await User.create({
-        name,
-        email,
-        avatar,
-        password,
-      });
-
-      sendToken(user, 201, res);
-    } catch (error) {
-      return next(new ErrorHandler(error.message, 500));
-    }
-  })
-);
-// activate user
+// activate user using GET request
 router.get(
   "/activation/:activation_token",
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { activation_token } = req.params;
 
+      // Verify activation token
       const newUser = jwt.verify(
         activation_token,
         process.env.ACTIVATION_SECRET
       );
 
       if (!newUser) {
-        return next(new ErrorHandler("Invalid token", 400));
+        return next(new ErrorHandler("Invalid or expired token", 400));
       }
 
       const { name, email, password, avatar } = newUser;
 
+      // Check if the user already exists
       let user = await User.findOne({ email });
-
       if (user) {
         return next(new ErrorHandler("User already exists", 400));
       }
 
+      // Create and save the new user
       user = await User.create({
         name,
         email,
@@ -128,12 +97,14 @@ router.get(
         password,
       });
 
-      sendToken(user, 201, res);
+      // Optional: Redirect to a success page
+      res.redirect("/activation/:activation_token");
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
   })
 );
+
 
 // login user
 router.post(
