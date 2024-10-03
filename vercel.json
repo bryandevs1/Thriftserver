@@ -10,6 +10,7 @@
   "routes": [
     {
       "src": "/activation/(.*)",
+      "methods": ["POST"],
       "dest": "/server.js"
     },
     {
