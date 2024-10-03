@@ -1,10 +1,26 @@
 {
-    "version": 2,
-    "name":"bryan",
-    "builds":[
-        {"src":"server.js","use":"@vercel/node"}
-    ],
-    "routes":[
-        {"src":"/(.*)","dest":"/server.js"}
-    ]
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/activation.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/activation/(.*)",
+      "dest": "/api/activation.js?id=$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "handle": "filesystem"
+    }
+  ]
 }
