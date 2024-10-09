@@ -35,7 +35,7 @@ router.post("/create-user", async (req, res, next) => {
 
     const activationToken = createActivationToken(user);
 
-    const activationUrl = `https://thriftserver.vercel.app/activation/${activationToken}`;
+    const activationUrl = `https://multi-vendor-chandan.vercel.app/activation/${activationToken}`;
 
     try {
       await sendMail({
@@ -63,8 +63,8 @@ const createActivationToken = (user) => {
 };
 
 // activate user (GET request)
-router.get(
-  "/activation/:activation_token",
+router.get("/activation/:activation_token", (req, res) => {
+  console.log("Activation route hit, token:", req.params.activation_token);
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { activation_token } = req.params; // Get the token from the URL
@@ -96,8 +96,8 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
-);
+  });
+});
 
 // login user
 router.post(
