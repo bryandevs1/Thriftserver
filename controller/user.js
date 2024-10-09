@@ -35,7 +35,7 @@ router.post("/create-user", async (req, res, next) => {
 
     const activationToken = createActivationToken(user);
 
-    const activationUrl = `https://thriftserver.vercel.app/activation/${activationToken}`;
+    const activationUrl = `https://thriftclient.vercel.app/activation/${activationToken}`;
 
     try {
       await sendMail({
@@ -64,37 +64,42 @@ const createActivationToken = (user) => {
 
 // activate user (GET request)
 // activate user (POST request)
-router.post("/activation", catchAsyncErrors(async (req, res, next) => {
-  try {
-    const { activation_token } = req.body; // Get the token from the request body
+router.post(
+  "/activation",
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const { activation_token } = req.body; // Get the token from the request body
 
-    const newUser = jwt.verify(activation_token, process.env.ACTIVATION_SECRET);
+      const newUser = jwt.verify(
+        activation_token,
+        process.env.ACTIVATION_SECRET
+      );
 
-    if (!newUser) {
-      return next(new ErrorHandler("Invalid token", 400));
+      if (!newUser) {
+        return next(new ErrorHandler("Invalid token", 400));
+      }
+
+      const { name, email, password, avatar } = newUser;
+
+      let user = await User.findOne({ email });
+
+      if (user) {
+        return next(new ErrorHandler("User already exists", 400));
+      }
+
+      user = await User.create({
+        name,
+        email,
+        avatar,
+        password,
+      });
+
+      sendToken(user, 201, res);
+    } catch (error) {
+      return next(new ErrorHandler(error.message, 500));
     }
-
-    const { name, email, password, avatar } = newUser;
-
-    let user = await User.findOne({ email });
-
-    if (user) {
-      return next(new ErrorHandler("User already exists", 400));
-    }
-
-    user = await User.create({
-      name,
-      email,
-      avatar,
-      password,
-    });
-
-    sendToken(user, 201, res);
-  } catch (error) {
-    return next(new ErrorHandler(error.message, 500));
-  }
-}));
-
+  })
+);
 
 // login user
 router.post(
