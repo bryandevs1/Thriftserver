@@ -9,7 +9,6 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://multi-vendor-chandan.vercel.app",
       "https://thriftclient.vercel.app",
     ],
     credentials: true,
