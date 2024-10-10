@@ -11,53 +11,55 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const sendShopToken = require("../utils/shopToken");
 
 // create shop
-router.post("/create-shop", catchAsyncErrors(async (req, res, next) => {
-  try {
-    const { email } = req.body;
-    const sellerEmail = await Shop.findOne({ email });
-    if (sellerEmail) {
-      return next(new ErrorHandler("User already exists", 400));
-    }
-
-    const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-      folder: "avatars",
-    });
-
-
-    const seller = {
-      name: req.body.name,
-      email: email,
-      password: req.body.password,
-      avatar: {
-        public_id: myCloud.public_id,
-        url: myCloud.secure_url,
-      },
-      address: req.body.address,
-      phoneNumber: req.body.phoneNumber,
-      zipCode: req.body.zipCode,
-    };
-
-    const activationToken = createActivationToken(seller);
-
-    const activationUrl = `https://thriftserver.vercel.app/seller/activation/${activationToken}`;
-
+router.post(
+  "/create-shop",
+  catchAsyncErrors(async (req, res, next) => {
     try {
-      await sendMail({
-        email: seller.email,
-        subject: "Activate your Shop",
-        message: `Hello ${seller.name}, please click on the link to activate your shop: ${activationUrl}`,
+      const { email } = req.body;
+      const sellerEmail = await Shop.findOne({ email });
+      if (sellerEmail) {
+        return next(new ErrorHandler("User already exists", 400));
+      }
+
+      const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        folder: "avatars",
       });
-      res.status(201).json({
-        success: true,
-        message: `please check your email:- ${seller.email} to activate your shop!`,
-      });
+
+      const seller = {
+        name: req.body.name,
+        email: email,
+        password: req.body.password,
+        avatar: {
+          public_id: myCloud.public_id,
+          url: myCloud.secure_url,
+        },
+        address: req.body.address,
+        phoneNumber: req.body.phoneNumber,
+        zipCode: req.body.zipCode,
+      };
+
+      const activationToken = createActivationToken(seller);
+
+      const activationUrl = `https://thriftclient.vercel.app/seller/activation/${activationToken}`;
+
+      try {
+        await sendMail({
+          email: seller.email,
+          subject: "Activate your Shop",
+          message: `Hello ${seller.name}, please click on the link to activate your shop: ${activationUrl}`,
+        });
+        res.status(201).json({
+          success: true,
+          message: `please check your email:- ${seller.email} to activate your shop!`,
+        });
+      } catch (error) {
+        return next(new ErrorHandler(error.message, 500));
+      }
     } catch (error) {
-      return next(new ErrorHandler(error.message, 500));
+      return next(new ErrorHandler(error.message, 400));
     }
-  } catch (error) {
-    return next(new ErrorHandler(error.message, 400));
-  }
-}));
+  })
+);
 
 // create activation token
 const createActivationToken = (seller) => {
@@ -206,26 +208,25 @@ router.put(
     try {
       let existsSeller = await Shop.findById(req.seller._id);
 
-        const imageId = existsSeller.avatar.public_id;
+      const imageId = existsSeller.avatar.public_id;
 
-        await cloudinary.v2.uploader.destroy(imageId);
+      await cloudinary.v2.uploader.destroy(imageId);
 
-        const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-          folder: "avatars",
-          width: 150,
-        });
+      const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        folder: "avatars",
+        width: 150,
+      });
 
-        existsSeller.avatar = {
-          public_id: myCloud.public_id,
-          url: myCloud.secure_url,
-        };
+      existsSeller.avatar = {
+        public_id: myCloud.public_id,
+        url: myCloud.secure_url,
+      };
 
-  
       await existsSeller.save();
 
       res.status(200).json({
         success: true,
-        seller:existsSeller,
+        seller: existsSeller,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
